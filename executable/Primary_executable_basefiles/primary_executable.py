@@ -1,5 +1,4 @@
 import subprocess
-import pkg_resources
 import os
 
 
@@ -38,7 +37,7 @@ def resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 
-image_path = resource_path('images/dark.png')
+image_path = resource_path('dark.png')
 
 
 
@@ -47,8 +46,8 @@ start_time=time.time()
 sys.set_int_max_str_digits(str_to_int_limits)
 
 
-
-__version__=0.106
+#new_vers=107
+__version__=0.107
 
 
 
@@ -333,10 +332,10 @@ def storage_enc():
     binary_gen=generate_psn(size,nbit, target_bit)
     
 
-    pseudo_random_number = int("".join(map(str, binary_gen)), 2)
+    storage_pseudo_random_number = int("".join(map(str, binary_gen)), 2)
     
 
-    return pseudo_random_number
+    return storage_pseudo_random_number
 
 
 
@@ -420,6 +419,7 @@ def custom_popup_yes_no(message, title='', keep_on_top=True):
 
 
 logins=logger("logfile.txt",0,dir_pathV,"globallogger")
+logins.info("APPLICATION VERSION NUMBER : ",str(__version__))
 
 #initiate connection object.
 try:
@@ -522,7 +522,9 @@ def signo_inp_method(image_path):
         height,width=image.shape
         pixel_values = image.flatten()
         logins.info('SIGNO_INP_METHOD','CALLED')    
+        
         return height, width, pixel_values
+
     except:
         logins.critical('SIGNO_INP_METHOD','ERROR IN CALLING')
 
@@ -852,7 +854,7 @@ def enc_key_packer(key_arr):
             key_arr=key_arr
         elif type(key_arr) == int:
             key_arr=list(str(key_arr))
-        packed_key=""
+        packed_key=''
         for i in range(len(key_arr)):
             packed_key+=str(key_arr[i])+"|"
 
@@ -962,7 +964,7 @@ def text_encrypt_decrypt(pseudo_random_number,unenc_key_arr):
         print(len(res))
         print("\nThe un-encrypted data is thus: ",res)
         logins.info('TEXT ENC_DENC_INTERNAL','CALLED')
-        enc=encoded_file_storage(r'C:\Users\chestor\Desktop\okay.pxe',storage_pseudo_random_number)
+        enc=encoded_file_storage(r'C:\Users\chestor\Desktop\enc_text.pxe',storage_pseudo_random_number)
         enc.encode(enc_list)
  
     except:
@@ -977,96 +979,106 @@ def signature_encrypt_decrypt(pseudo_random_number, unenc_key_arr,height, width)
 
 
     try:
+
+
+
+
+
+
+    
+
+        prim_len=len(unenc_key_arr)
+        sbox_arr=sbox(height,width)
+        packed_secondary_key=enc_key_packer(sbox_arr)
+
+        layout = [[sg.Input(key='-IN-'), sg.FileBrowse()],
+                [sg.Button('Go'), sg.Button('Exit')]]
+            
+        window = sg.Window('Select your secondary encryption key file', layout)
+        event,values = window.read()
+        file_path = values['-IN-']
+        window.close()
+        
+
+        primary_key_enc_storage=encoded_file_storage(file_path,storage_pseudo_random_number)
+        primary_key_enc_storage.encode(sbox_arr)
+            
+
+
+        if prim_len>=len(str(pseudo_random_number)):
+            temp=prim_len//len(str(pseudo_random_number))
+            rem=prim_len-temp*(len(str(pseudo_random_number)))
+            pseudo_random_number=temp*(str(pseudo_random_number))+rem*"0"
+
+        else:
+            pseudo_random_number=int(str(pseudo_random_number)[:len(unenc_key_arr)])
+            
         packed_primary_key=enc_key_packer(pseudo_random_number)
 
         layout = [[sg.Input(key='-IN-'), sg.FileBrowse()],
-                          [sg.Button('Go'), sg.Button('Exit')]]
+                        [sg.Button('Go'), sg.Button('Exit')]]
                 
         window = sg.Window('Select your primary encryption key file', layout)
         event,values = window.read()
         file_path = values['-IN-']
         window.close()
+        temp_key=str(pseudo_random_number)
+        print(len(list(temp_key)))
 
-        binary_primary_key=text_to_binary(packed_primary_key)
-        with open(file_path,'w+') as file:
-            file.write(binary_primary_key)
-
-
-
-
-        if event == 'Go':
-
-            prim_len=len(unenc_key_arr)
-            sbox_arr=sbox(height,width)
-            packed_secondary_key=enc_key_packer(sbox_arr)
-
-            layout = [[sg.Input(key='-IN-'), sg.FileBrowse()],
-                    [sg.Button('Go'), sg.Button('Exit')]]
-                
-            window = sg.Window('Select your secondary encryption key file', layout)
-            event,values = window.read()
-            file_path = values['-IN-']
-            window.close()
-
-            binary_secondary_key=text_to_binary(packed_secondary_key)
-            with open(file_path,'w+') as file:
-                file.write(binary_secondary_key)
-
-            if prim_len>=len(str(pseudo_random_number)):
-                temp=prim_len//len(str(pseudo_random_number))
-                rem=prim_len-temp*(len(str(pseudo_random_number)))
-                pseudo_random_number=temp*(str(pseudo_random_number))+rem*"0"
-
-            else:
-                pseudo_random_number=int(str(pseudo_random_number)[:len(unenc_key_arr)])
-                
-
-            
-            enc_key_arr=[]
-            for i in range(prim_len):
-                enc_key_arr+=[unenc_key_arr[i]^int(str(pseudo_random_number)[i]),]
-
-
-            enc_dict_pck={}
-            for i in range(prim_len):
-                enc_dict_pck[sbox_arr[i]]=enc_key_arr[i]
-
-            
-
-            
-
-            enc_np_arr=np.array(sbox_arr)
-
-            enc_image=enc_np_arr.reshape((height,width))
-            enc_image=enc_image.astype(np.uint8)
-            
-
-
-
-
-
-            unenc_arr=[]
-            for i in range(prim_len):
-                unenc_arr+=[enc_dict_pck[sbox_arr[i]],]
-            
-            for i in range(len(unenc_key_arr)):
-                unenc_arr[i]=[enc_key_arr[i]^int(str(pseudo_random_number)[i]),]
-            
-
-            accuracy_checker(unenc_key_arr,unenc_arr, prim_len)
-            unenc_np_arr=np.array(unenc_arr)
-            unenc_image=unenc_np_arr.reshape((height,width))
-            unenc_image=unenc_image.astype(np.uint8)
-            cv2.imshow("Encrypted signature",enc_image)
-            cv2.imshow("Un- Encrypted signature", unenc_image)
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
-            postext=enc_key_packer(sbox_arr)
-            logins.info('SIGNATURE ENC DENC INTERAL', 'CALLED')
-            window.close()
-            sys.exit()
+        primary_key_enc_storage=encoded_file_storage(file_path,storage_pseudo_random_number)
+        primary_key_enc_storage.encode(temp_key)
+        
 
         
+        enc_key_arr=[]
+        for i in range(prim_len):
+            enc_key_arr+=[unenc_key_arr[i]^int(str(pseudo_random_number)[i]),]
+
+
+        enc_dict_pck={}
+        for i in range(prim_len):
+            enc_dict_pck[sbox_arr[i]]=enc_key_arr[i]
+
+        
+
+        
+
+        enc_np_arr=np.array(sbox_arr)
+
+        enc_image=enc_np_arr.reshape((height,width))
+        enc_image=enc_image.astype(np.uint8)
+        
+
+
+
+
+
+        unenc_arr=[]
+        for i in range(prim_len):
+            unenc_arr+=[enc_dict_pck[sbox_arr[i]],]
+        
+        for i in range(len(unenc_key_arr)):
+            unenc_arr[i]=[enc_key_arr[i]^int(str(pseudo_random_number)[i]),]
+        
+
+        accuracy_checker(unenc_key_arr,unenc_arr, prim_len)
+        unenc_np_arr=np.array(unenc_arr)
+        print(len(unenc_np_arr))
+        unenc_image=unenc_np_arr.reshape((height,width))
+        unenc_image=unenc_image.astype(np.uint8)
+        cv2.imshow("Encrypted signature",enc_image)
+        cv2.imshow("Un- Encrypted signature", unenc_image)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+        postext=enc_key_packer(sbox_arr)
+        logins.info('SIGNATURE ENC DENC INTERAL', 'CALLED')
+        print('hello')
+        enc=encoded_file_storage(r'C:\Users\chestor\Desktop\enc_signature.pxe',storage_pseudo_random_number)
+        enc.encode(enc_key_arr)
+        window.close()
+        sys.exit()
+
+    
 
     except:
         logins.warning('SIGNATURE ENC DENC INTERNAL','ERROR IN CALLING')
@@ -1240,6 +1252,7 @@ def main():
             if event== 'Yes':
 
                 height,width, unenc_key_arr=signo_inp_method(file_path)
+
                 signature_encrypt_decrypt(pseudo_random_number,unenc_key_arr,height,width)
             else:
                 sys.exit()
@@ -1248,6 +1261,7 @@ def main():
 
         except:
             logins.critical('STAT INP SIGNATURE','ERROR IN CALLING STAT INP')
+
 
 
     elif stat_inp==4:
@@ -1277,7 +1291,15 @@ def main():
 try:
     if __name__=="__main__":
         main()
+        logins.info('MAIN', 'CALLED')
+
 except:
+    logins.critical('MAIN', 'CRITICAL ERROR IN CALLING MAIN')
     sys.exit()
+
+
+
+
+
 
 
