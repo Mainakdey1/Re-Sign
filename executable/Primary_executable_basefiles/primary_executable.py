@@ -29,7 +29,7 @@ stat_inp=0
 
 dir_pathV= expanduser("~")+"\\"    #saves log file directly to the current working directory
 sg.theme('DarkTeal10')             #sets the global gui color for the program
-url='https://raw.githubusercontent.com/Mainakdey1/Image-Encryption-using-Cellular-Automata-Draft/main/Main/Main(1).py'
+url='https://raw.githubusercontent.com/Mainakdey1/Image-Encryption-using-Cellular-Automata-Draft/refs/heads/main/executable/Primary_executable_basefiles/primary_executable.py'
 
 
 def resource_path(relative_path):
