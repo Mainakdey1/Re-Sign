@@ -13,7 +13,7 @@ forged_dir = os.path.join(data_dir, "forged")
 
 
 
-def load_data(data_dir, img_size = (128, 128)):
+def load_data(data_dir, label , img_size = (128, 128)):
 
 
     
@@ -30,13 +30,24 @@ def load_data(data_dir, img_size = (128, 128)):
             img_array = img_to_array(img)  
             images.append(img_array)
             labels.append(label)  
-        return img_array
+        return np.array(images), np.array(labels)
     
-    return load_images_from_folder(data_dir,1)
+    return load_images_from_folder(data_dir, label)
 
-gen_sign = load_data(genuine_dir)
-forged_sign = load_data(forged_dir)
+gen_signatures, gen_labels = load_data(genuine_dir,1)
+forged_signatures, forged_labels = load_data(forged_dir,0)
 
 
-print(gen_sign)
-print(forged_sign)
+all_images = np.concatenate((gen_signatures, forged_signatures), axis=0)
+all_labels = np.concatenate((gen_labels, forged_labels), axis=0)
+
+from sklearn.utils import shuffle
+all_images, all_labels = shuffle(all_images, all_labels, random_state=42)
+
+all_images = all_images / 255.0
+
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(all_images, all_labels, test_size=0.2, random_state=42)
+
+print(f"Training data shape: {X_train.shape}")
+print(f"Testing data shape: {X_test.shape}")
