@@ -28,6 +28,8 @@ import bcrypt
 import pyrebase #important note: Please use pip install pyrebase4 or whatever the lates version of pyrebase is. There is module and package naming discrepancy for pyrebase.
 import firebase_admin
 from firebase_admin import credentials, db
+import requests
+from datetime import datetime
 
 
 
@@ -65,6 +67,45 @@ sys.set_int_max_str_digits(str_to_int_limits)
 __version__=0.108
 
 
+
+def get_online_time():
+    try:
+        response = requests.get("https://timeapi.io/api/Time/current/zone?timeZone=Asia/Kolkata")
+        response.raise_for_status()  # Raise exception for HTTP errors
+        data = response.json()
+        return data
+
+    except requests.RequestException as e:
+        print(f"Error fetching online time: {e}")
+        return None
+
+def compare_times():
+    dt= datetime.now()
+    hour= dt.hour
+    minute = dt.minute
+    day = dt.day
+    month = dt.month
+    try:
+        dted = get_online_time()
+        if dted['hour'] == hour and dted['minute'] == minute and dted['day'] == day and dted['month'] == month:
+            return True
+        else:
+            return False
+    except:
+        print('Errorrrrr')
+
+
+try:
+    if compare_times() == True:
+        print('Time zones are synchronized')
+
+    else:
+        print('Time zone not synchronized, please synchronize data and time on local device.')
+
+
+except Exception as e:
+    print(f"An error occured: {e}"
+          )
 
 
 #Logger class for logging events. Events have 3 severity:info, warning and critical
@@ -461,16 +502,21 @@ firebase_admin.initialize_app(cred, {
     "databaseURL": "https://ssenc-96031-default-rtdb.asia-southeast1.firebasedatabase.app"
 })
 
+
+
 def change_password_in_database(username, new_password):
-    ref = db.reference("users")  # Reference the "users" node in the database
+    ref = db.reference('users')  # Reference the "users" node in the database
     user_ref = ref.child(username)  # Locate the specific user
     hashed_new_pw= hash_password(new_password)
 
     if user_ref.get():
         user_ref.update({"password": hashed_new_pw.decode('utf-8')})
+        sg.popup("Password reset successfully", "Welcome back!", title="Success", no_titlebar=True)  # Show success message
         print("Password updated successfully in the database!")
     else:
         print("User not found.")
+
+    return
 
 
 def hash_password(password):
@@ -487,23 +533,23 @@ def hash_password(password):
 
 
 firebase = pyrebase.initialize_app(firebase_config)
-db = firebase.database()
+dab = firebase.database()
 
 def verify_password(stored_password, provided_password):
     return bcrypt.checkpw(provided_password.encode('utf-8'), stored_password)
 
 def sign_up(username, password):
-    users = db.child("users").get().val()
+    users = dab.child("users").get().val()
     if users and username in users:
         print("Username already exists.")
         return
     
     hashed_password = hash_password(password)
-    db.child("users").child(username).set({"password": hashed_password.decode('utf-8')})
+    dab.child("users").child(username).set({"password": hashed_password.decode('utf-8')})
     print("User registered successfully!")
 
 def login(username, password):
-    user = db.child("users").child(username).get().val()
+    user = dab.child("users").child(username).get().val()
     if not user:
         print("User not found.")
         sys.exit()
@@ -524,7 +570,7 @@ def login(username, password):
 
 def sign_up_gui():
 
-    import PySimpleGUI as sg
+
 
 
     sg.LOOK_AND_FEEL_TABLE['CustomSignupTheme'] = {
@@ -537,7 +583,7 @@ def sign_up_gui():
         'PROGRESS': ('#2E86C1', '#D0D3D4'),
         'BORDER': 1, 'SLIDER_DEPTH': 0, 'PROGRESS_DEPTH': 0,
     }
-    sg.theme('CustomSignupTheme')
+
 
 
     layout = [
@@ -554,13 +600,15 @@ def sign_up_gui():
     ]
 
 
-    window = sg.Window("Signup Page", layout, size=(450, 350), element_justification='center', finalize=True)
+    window = sg.Window("Signup Page", layout, size=(450, 350), element_justification='center', finalize=True, no_titlebar=True)
 
 
     while True:
         event, values = window.read()
 
         if event == sg.WINDOW_CLOSED or event == 'Cancel':
+            window.close()
+            sys.exit()
             break
         elif event == 'Sign Up':
             username = values['-USERNAME-']
@@ -570,8 +618,9 @@ def sign_up_gui():
 
             if username  and password:
 
+                sg.popup("Registered as new user!", "Welcome to the app!", title="Success", no_titlebar=True)  # Show success message
                 window.close()
-                sg.popup("Signup Successful!", "Welcome to the platform!", title="Success", no_titlebar=True)  # Show success message
+ 
             else:
                 window['-MESSAGE-'].update("All fields are required.", text_color='red')
 
@@ -584,7 +633,6 @@ def sign_up_gui():
 
 def password_reset_gui():
 
-    import PySimpleGUI as sg
 
 
     sg.LOOK_AND_FEEL_TABLE['CustomSignupTheme'] = {
@@ -597,7 +645,7 @@ def password_reset_gui():
         'PROGRESS': ('#2E86C1', '#D0D3D4'),
         'BORDER': 1, 'SLIDER_DEPTH': 0, 'PROGRESS_DEPTH': 0,
     }
-    sg.theme('CustomSignupTheme')
+
 
 
     layout = [
@@ -628,9 +676,11 @@ def password_reset_gui():
             
 
             if username  and npassword:
+
                 window['-MESSAGE-'].update("Password reset successfully 🎉", text_color='green')
             else:
                 window['-MESSAGE-'].update("All fields are required.", text_color='red')
+                
 
 
     window.close()
@@ -645,7 +695,7 @@ sg.LOOK_AND_FEEL_TABLE['CustomTheme'] = {
     'PROGRESS': ('#2E86C1', '#D0D3D4'),
     'BORDER': 1, 'SLIDER_DEPTH': 0, 'PROGRESS_DEPTH': 0,
 }
-sg.theme('CustomTheme')
+
 
 
 layout = [
@@ -671,7 +721,9 @@ while True:
     event, values = window.read()
 
     if event == sg.WINDOW_CLOSED or event == 'Cancel':
+        sys.exit()
         break
+
     elif event == 'Login':
         username = values['-USERNAME-']
         password = values['-PASSWORD-']
@@ -681,13 +733,16 @@ while True:
         if login(username, password):
 
             window['-MESSAGE-'].update("Login successful! 🎉", text_color='green')
-            window.close()
+            
 
         else:
             window['-MESSAGE-'].update("Invalid username or password.", text_color='red')
+            
+        break
     elif event == '-FORGOT-':
         password_reset_gui()
         window.close()
+        break
    
 
     elif event == '-NEW-':
@@ -695,6 +750,7 @@ while True:
         sign_up_gui()
 
         print('new person sheesh')
+        break
 
 
 window.close()

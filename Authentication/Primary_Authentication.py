@@ -40,7 +40,7 @@ def change_password_in_database(username, new_password):
 def hash_password(password):
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
 
-newpassword='catcat'
+newpassword='catcatcat'
 hashed_new_pw= hash_password(newpassword)
 # Example usage
 change_password_in_database('bobcat', hashed_new_pw.decode('utf-8'))
