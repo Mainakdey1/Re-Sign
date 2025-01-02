@@ -1,5 +1,8 @@
 import bcrypt
 import pyrebase
+import firebase_admin
+from firebase_admin import credentials, db
+
 
 #important note: Please use pip install pyrebase4 or whatever the lates version of pyrebase is. There is module and package naming discrepancy for pyrebase.
 
@@ -17,11 +20,34 @@ firebase_config = {
 }
 
 
-firebase = pyrebase.initialize_app(firebase_config)
-db = firebase.database()
+# Initialize Firebase app
+cred = credentials.Certificate(r"C:\Users\chestor\Desktop\Project_tempfiles\Units\ssenc_json.json")
+firebase_admin.initialize_app(cred, {
+    "databaseURL": "https://ssenc-96031-default-rtdb.asia-southeast1.firebasedatabase.app"
+})
+
+def change_password_in_database(username, new_password):
+    ref = db.reference("users")  # Reference the "users" node in the database
+    user_ref = ref.child(username)  # Locate the specific user
+
+    if user_ref.get():
+        user_ref.update({"password": new_password})
+        print("Password updated successfully in the database!")
+    else:
+        print("User not found.")
+
 
 def hash_password(password):
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
+newpassword='catcat'
+hashed_new_pw= hash_password(newpassword)
+# Example usage
+change_password_in_database('bobcat', hashed_new_pw.decode('utf-8'))
+
+firebase = pyrebase.initialize_app(firebase_config)
+db = firebase.database()
+
 
 def verify_password(stored_password, provided_password):
     return bcrypt.checkpw(provided_password.encode('utf-8'), stored_password)

@@ -26,6 +26,8 @@ from tensorflow.keras.preprocessing.image import load_img, img_to_array
 from sklearn.model_selection import train_test_split
 import bcrypt
 import pyrebase #important note: Please use pip install pyrebase4 or whatever the lates version of pyrebase is. There is module and package naming discrepancy for pyrebase.
+import firebase_admin
+from firebase_admin import credentials, db
 
 
 
@@ -452,11 +454,40 @@ firebase_config = {
 }
 
 
-firebase = pyrebase.initialize_app(firebase_config)
-db = firebase.database()
+
+# Initialize Firebase app
+cred = credentials.Certificate(r"C:\Users\chestor\Desktop\Project_tempfiles\Units\ssenc_json.json")
+firebase_admin.initialize_app(cred, {
+    "databaseURL": "https://ssenc-96031-default-rtdb.asia-southeast1.firebasedatabase.app"
+})
+
+def change_password_in_database(username, new_password):
+    ref = db.reference("users")  # Reference the "users" node in the database
+    user_ref = ref.child(username)  # Locate the specific user
+    hashed_new_pw= hash_password(new_password)
+
+    if user_ref.get():
+        user_ref.update({"password": hashed_new_pw.decode('utf-8')})
+        print("Password updated successfully in the database!")
+    else:
+        print("User not found.")
+
 
 def hash_password(password):
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
+
+
+
+
+
+
+
+
+
+
+firebase = pyrebase.initialize_app(firebase_config)
+db = firebase.database()
 
 def verify_password(stored_password, provided_password):
     return bcrypt.checkpw(provided_password.encode('utf-8'), stored_password)
@@ -476,37 +507,200 @@ def login(username, password):
     if not user:
         print("User not found.")
         sys.exit()
-        return
+        return False
+
     
     stored_password = user["password"].encode('utf-8')
     if verify_password(stored_password, password):
         print("Login successful!")
+
     else:
         print("Invalid username or password.")
+        return False
         sys.exit()
+    
+    return True
 
 
-print("Welcome to the Authenticator!")
+def sign_up_gui():
 
-print("\nOptions:")
-print("1. Sign Up")
-print("2. Login")
-print("3. Exit")
-choice = input("Enter your choice: ")
+    import PySimpleGUI as sg
 
-if choice == "1":
-    username = input("Enter a username: ")
-    password = input("Enter a password: ")
-    sign_up(username, password)
-elif choice == "2":
-    username = input("Enter your username: ")
-    password = input("Enter your password: ")
-    login(username, password)
-elif choice == "3":
-    print("Goodbye!")
 
-else:
-    print("Invalid choice. Please try again.")
+    sg.LOOK_AND_FEEL_TABLE['CustomSignupTheme'] = {
+        'BACKGROUND': '#2C3E50',
+        'TEXT': '#ECF0F1',
+        'INPUT': '#34495E',
+        'TEXT_INPUT': '#ECF0F1',
+        'SCROLL': '#2C3E50',
+        'BUTTON': ('#FFFFFF', '#1ABC9C'),
+        'PROGRESS': ('#2E86C1', '#D0D3D4'),
+        'BORDER': 1, 'SLIDER_DEPTH': 0, 'PROGRESS_DEPTH': 0,
+    }
+    sg.theme('CustomSignupTheme')
+
+
+    layout = [
+        [sg.Text("✨ Sign Up ✨", size=(30, 1), justification='center', font=("Helvetica", 20), text_color='#1ABC9C')],
+        [sg.Text("Create a new account", size=(25, 1), justification='center', font=("Helvetica", 12), text_color='lightgray')],
+        [sg.HorizontalSeparator(color='#1ABC9C')],
+        [sg.Text("Username:", size=(10, 1), font=("Helvetica", 12)), 
+        sg.InputText("", size=(30, 1), key='-USERNAME-', tooltip="Enter your username")],
+        [sg.Text("Password:", size=(10, 1), font=("Helvetica", 12)), 
+        sg.InputText("", size=(30, 1), key='-PASSWORD-', password_char='*', tooltip="Enter your password")],
+        [sg.Button("Sign Up", size=(15, 1), font=("Helvetica", 12), tooltip="Click to create your account"),
+        sg.Button("Cancel", size=(15, 1), font=("Helvetica", 12))],
+        [sg.Text('', size=(40, 1), justification='center', key='-MESSAGE-', text_color='red')],
+    ]
+
+
+    window = sg.Window("Signup Page", layout, size=(450, 350), element_justification='center', finalize=True)
+
+
+    while True:
+        event, values = window.read()
+
+        if event == sg.WINDOW_CLOSED or event == 'Cancel':
+            break
+        elif event == 'Sign Up':
+            username = values['-USERNAME-']
+            password = values['-PASSWORD-']
+            sign_up(username =  username, password = password)
+
+
+            if username  and password:
+
+                window.close()
+                sg.popup("Signup Successful!", "Welcome to the platform!", title="Success", no_titlebar=True)  # Show success message
+            else:
+                window['-MESSAGE-'].update("All fields are required.", text_color='red')
+
+            window.close()
+
+
+    window.close()
+    return 
+
+
+def password_reset_gui():
+
+    import PySimpleGUI as sg
+
+
+    sg.LOOK_AND_FEEL_TABLE['CustomSignupTheme'] = {
+        'BACKGROUND': '#2C3E50',
+        'TEXT': '#ECF0F1',
+        'INPUT': '#34495E',
+        'TEXT_INPUT': '#ECF0F1',
+        'SCROLL': '#2C3E50',
+        'BUTTON': ('#FFFFFF', '#1ABC9C'),
+        'PROGRESS': ('#2E86C1', '#D0D3D4'),
+        'BORDER': 1, 'SLIDER_DEPTH': 0, 'PROGRESS_DEPTH': 0,
+    }
+    sg.theme('CustomSignupTheme')
+
+
+    layout = [
+        [sg.Text(" Reset password ", size=(30, 1), justification='center', font=("Helvetica", 20), text_color='#1ABC9C')],
+        [sg.Text("Reset your password", size=(27, 1), justification='center', font=("Helvetica", 12), text_color='lightgray')],
+        [sg.HorizontalSeparator(color='#1ABC9C')],
+        [sg.Text("Username:", size=(13, 1), font=("Helvetica", 12)), 
+        sg.InputText("", size=(30, 1), key='-USERNAME-', tooltip="Enter your username")],
+        [sg.Text("New password:", size=(13, 1), font=("Helvetica", 12)), 
+        sg.InputText("", size=(30, 1), key='-PASSWORD-', password_char='*', tooltip="Enter your password")],
+        [sg.Button("Reset", size=(15, 1), font=("Helvetica", 12), tooltip="Click to create your account"),
+        sg.Button("Cancel", size=(15, 1), font=("Helvetica", 12))],
+        [sg.Text('', size=(40, 1), justification='center', key='-MESSAGE-', text_color='red')],
+    ]
+
+
+    window = sg.Window("Signup Page", layout, size=(450, 350), element_justification='center', finalize=True, no_titlebar=True)
+
+    while True:
+        event, values = window.read()
+
+        if event == sg.WINDOW_CLOSED or event == 'Cancel':
+            break
+        elif event == 'Reset':
+            username = values['-USERNAME-']
+            npassword = values['-PASSWORD-']
+            change_password_in_database(username = username, new_password = npassword)
+            
+
+            if username  and npassword:
+                window['-MESSAGE-'].update("Password reset successfully 🎉", text_color='green')
+            else:
+                window['-MESSAGE-'].update("All fields are required.", text_color='red')
+
+
+    window.close()
+
+sg.LOOK_AND_FEEL_TABLE['CustomTheme'] = {
+    'BACKGROUND': '#2C3E50',
+    'TEXT': '#ECF0F1',
+    'INPUT': '#34495E',
+    'TEXT_INPUT': '#ECF0F1',
+    'SCROLL': '#2C3E50',
+    'BUTTON': ('#FFFFFF', '#1ABC9C'),
+    'PROGRESS': ('#2E86C1', '#D0D3D4'),
+    'BORDER': 1, 'SLIDER_DEPTH': 0, 'PROGRESS_DEPTH': 0,
+}
+sg.theme('CustomTheme')
+
+
+layout = [
+    [sg.Text("✨ Welcome to MyApp ✨", size=(30, 1), justification='center', font=("Helvetica", 20), text_color='#1ABC9C')],
+    [sg.Text("Login to Continue", size=(25, 1), justification='center', font=("Helvetica", 12), text_color='lightgray')],
+    [sg.HorizontalSeparator(color='#1ABC9C')],
+    [sg.Text("Username:", size=(10, 1), font=("Helvetica", 12)), 
+     sg.InputText(key='-USERNAME-', size=(30, 1), tooltip="Enter your username")],
+    [sg.Text("Password:", size=(10, 1), font=("Helvetica", 12)), 
+     sg.InputText(key='-PASSWORD-', size=(30, 1), password_char='*', tooltip="Enter your password")],
+    [sg.Text("", size=(40, 1), key='-MESSAGE-', text_color='red', justification='center')],
+    [sg.Button("Login", size=(10, 1), font=("Helvetica", 12), tooltip="Click to log in"),
+     sg.Button("Cancel", size=(10, 1), font=("Helvetica", 12))],
+    [sg.Text("Forgot Password?", size=(20, 1), justification='center', font=("Helvetica", 10), text_color='#1ABC9C', enable_events=True, key='-FORGOT-')],
+    [sg.Text("New to the Authenticator?", size=(20, 1), justification='center', font=("Helvetica", 10), text_color='#1ABC9C', enable_events=True, key='-NEW-')]
+]
+
+
+window = sg.Window("Login Page", layout, size=(450, 300), element_justification='center', finalize=True, no_titlebar=True)
+
+
+while True:
+    event, values = window.read()
+
+    if event == sg.WINDOW_CLOSED or event == 'Cancel':
+        break
+    elif event == 'Login':
+        username = values['-USERNAME-']
+        password = values['-PASSWORD-']
+
+
+
+        if login(username, password):
+
+            window['-MESSAGE-'].update("Login successful! 🎉", text_color='green')
+            window.close()
+
+        else:
+            window['-MESSAGE-'].update("Invalid username or password.", text_color='red')
+    elif event == '-FORGOT-':
+        password_reset_gui()
+        window.close()
+   
+
+    elif event == '-NEW-':
+        window.close()
+        sign_up_gui()
+
+        print('new person sheesh')
+
+
+window.close()
+
+
+
 
 
 
