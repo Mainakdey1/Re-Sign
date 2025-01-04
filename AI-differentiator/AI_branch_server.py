@@ -50,9 +50,11 @@ url='https://raw.githubusercontent.com/Mainakdey1/Image-Encryption-using-Cellula
 
 
 def resource_path(relative_path):
-    base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
-    return os.path.join(base_path, relative_path)
-
+    try:
+        base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+        return os.path.join(base_path, relative_path)
+    except Exception as e:
+        print(e)
 
 image_path = resource_path('dark.png')
 
@@ -91,8 +93,8 @@ def compare_times():
             return True
         else:
             return False
-    except:
-        print('Errorrrrr')
+    except Exception as e:
+        print(e)
 
 
 try:
@@ -101,6 +103,7 @@ try:
 
     else:
         print('Time zone not synchronized, please synchronize data and time on local device.')
+        sys.exit()
 
 
 except Exception as e:
