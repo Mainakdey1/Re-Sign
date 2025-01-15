@@ -68,6 +68,13 @@ sys.set_int_max_str_digits(str_to_int_limits)
 #new_vers=107
 __version__=0.108
 
+def timezone_not_synced():
+
+    sg.popup('Time zones not synced. Please set system time to run the application', title='timezone desync error', no_titlebar= True)
+    sys.exit()
+    return False
+    
+
 
 
 def get_online_time():
@@ -102,6 +109,7 @@ try:
         print('Time zones are synchronized')
 
     else:
+        timezone_not_synced()
         print('Time zone not synchronized, please synchronize data and time on local device.')
         sys.exit()
 
@@ -554,8 +562,9 @@ def sign_up(username, password):
 def login(username, password):
     user = dab.child("users").child(username).get().val()
     if not user:
+
         print("User not found.")
-        sys.exit()
+        invalid_user_gui()
         return False
 
     
@@ -564,11 +573,33 @@ def login(username, password):
         print("Login successful!")
 
     else:
+        user_not_found_gui()
         print("Invalid username or password.")
-        return False
         sys.exit()
+
     
     return True
+
+
+def invalid_user_gui():
+
+
+    sg.popup('Username not found', title='Username error', no_titlebar= True)
+    sys.exit()
+    return False
+    
+
+def user_not_found_gui():
+
+
+    sg.popup('Invalid username or password', title='username/password error', no_titlebar= True)
+    sys.exit()
+    return False
+    
+
+
+
+
 
 
 def sign_up_gui():
@@ -702,7 +733,7 @@ sg.LOOK_AND_FEEL_TABLE['CustomTheme'] = {
 
 
 layout = [
-    [sg.Text("✨ Welcome to MyApp ✨", size=(30, 1), justification='center', font=("Helvetica", 20), text_color='#1ABC9C')],
+    [sg.Text(" Welcome to Authenticator ", size=(30, 1), justification='center', font=("Helvetica", 20), text_color='#1ABC9C')],
     [sg.Text("Login to Continue", size=(25, 1), justification='center', font=("Helvetica", 12), text_color='lightgray')],
     [sg.HorizontalSeparator(color='#1ABC9C')],
     [sg.Text("Username:", size=(10, 1), font=("Helvetica", 12)), 
