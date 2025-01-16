@@ -66,15 +66,282 @@ sys.set_int_max_str_digits(str_to_int_limits)
 
 
 #new_vers=107
-__version__=0.108
+__version__=0.110
 
-def timezone_not_synced():
 
-    sg.popup('Time zones not synced. Please set system time to run the application', title='timezone desync error', no_titlebar= True)
-    sys.exit()
-    return False
+
+#gui space
+
+def welcome_window_gui():
+    try:
+        sg.LOOK_AND_FEEL_TABLE['CustomTheme'] = {
+            'BACKGROUND': '#2C3E50',
+            'TEXT': '#ECF0F1',
+            'INPUT': '#34495E',
+            'TEXT_INPUT': '#ECF0F1',
+            'SCROLL': '#2C3E50',
+            'BUTTON': ('#FFFFFF', '#1ABC9C'),
+            'PROGRESS': ('#2E86C1', '#D0D3D4'),
+            'BORDER': 1, 'SLIDER_DEPTH': 0, 'PROGRESS_DEPTH': 0,
+        }
+
+
+
+        layout = [
+            [sg.Text(" Welcome to Authenticator ", size=(30, 1), justification='center', font=("Helvetica", 20), text_color='#1ABC9C')],
+            [sg.Text("Login to Continue", size=(25, 1), justification='center', font=("Helvetica", 12), text_color='lightgray')],
+            [sg.HorizontalSeparator(color='#1ABC9C')],
+            [sg.Text("Username:", size=(10, 1), font=("Helvetica", 12)), 
+            sg.InputText(key='-USERNAME-', size=(30, 1), tooltip="Enter your username")],
+            [sg.Text("Password:", size=(10, 1), font=("Helvetica", 12)), 
+            sg.InputText(key='-PASSWORD-', size=(30, 1), password_char='*', tooltip="Enter your password")],
+            [sg.Text("", size=(40, 1), key='-MESSAGE-', text_color='red', justification='center')],
+            [sg.Button("Login", size=(10, 1), font=("Helvetica", 12), tooltip="Click to log in"),
+            sg.Button("Cancel", size=(10, 1), font=("Helvetica", 12))],
+            [sg.Text("Forgot Password?", size=(20, 1), justification='center', font=("Helvetica", 10), text_color='#1ABC9C', enable_events=True, key='-FORGOT-')],
+            [sg.Text("New to the Authenticator?", size=(20, 1), justification='center', font=("Helvetica", 10), text_color='#1ABC9C', enable_events=True, key='-NEW-')]
+        ]
+
+
+        window = sg.Window("Login Page", layout, size=(450, 300), element_justification='center', finalize=True, no_titlebar=True)
+
+
+        while True:
+            event, values = window.read()
+
+            if event == sg.WINDOW_CLOSED or event == 'Cancel':
+                sys.exit()
+                break
+
+            elif event == 'Login':
+                username = values['-USERNAME-']
+                password = values['-PASSWORD-']
+
+
+
+                if login(username, password):
+
+                    window['-MESSAGE-'].update("Login successful! 🎉", text_color='green')
+                    
+
+                else:
+                    window['-MESSAGE-'].update("Invalid username or password.", text_color='red')
+                    
+                break
+            elif event == '-FORGOT-':
+                password_reset_gui()
+                window.close()
+                break
+        
+
+            elif event == '-NEW-':
+                window.close()
+                sign_up_gui()
+
+                print('new person sheesh')
+                break
+
+
+        window.close()
+    except Exception as e:
+        unknown_error()
+        print(e)
+
+
+
+def username_exists():
+    try:
+        sg.popup('Username already exists. Please sign in or reset password.', title='username exists error', no_titlebar= True)
+        sign_up()
+        return False
+    except Exception as e:
+        print(e)
+        unknown_error()
+
+    
+def unknown_error():
+    try:
+        sg.popup('An unknown error has occured. Please restart the application. If the issue persists, consult the log files.', title='unknown error', no_titlebar= True)
+        sys.exit()
+        return False
+    except Exception as e:
+        print(e)
     
 
+def custom_popup_yes_no(message, title='', keep_on_top=True):
+    # Define the layout for the custom popup window
+    try:
+        layout = [
+            [sg.Text(message)],
+            [sg.Button('Yes'),
+            sg.Button('No')]
+        ]
+
+        # Create the window without a title bar
+        window = sg.Window(title, layout, keep_on_top=keep_on_top, no_titlebar=True, element_justification='center')
+
+        # Read the window's events
+        event, _ = window.read()
+
+        # Close the window
+        window.close()
+
+        return event
+    
+    except Exception as e:
+        print(e)
+        unknown_error()
+
+def timezone_not_synced():
+    try:
+        sg.popup('Time zones not synced. Please set system time to run the application', title='timezone desync error', no_titlebar= True)
+        sys.exit()
+        return False
+    except Exception as e:
+        print(e)
+        unknown_error()
+
+
+def invalid_user_gui():
+
+    try:
+        sg.popup('Username not found', title='Username error', no_titlebar= True)
+        sys.exit()
+        return False
+    except Exception as e:
+        print(e)
+        unknown_error()
+        
+
+def user_not_found_gui():
+
+    try:
+        sg.popup('Invalid username or password', title='username/password error', no_titlebar= True)
+        sys.exit()
+        return False
+    except Exception as e:
+        print(e)
+        unknown_error()
+
+def sign_up_gui():
+
+
+
+    try:
+        sg.LOOK_AND_FEEL_TABLE['CustomSignupTheme'] = {
+            'BACKGROUND': '#2C3E50',
+            'TEXT': '#ECF0F1',
+            'INPUT': '#34495E',
+            'TEXT_INPUT': '#ECF0F1',
+            'SCROLL': '#2C3E50',
+            'BUTTON': ('#FFFFFF', '#1ABC9C'),
+            'PROGRESS': ('#2E86C1', '#D0D3D4'),
+            'BORDER': 1, 'SLIDER_DEPTH': 0, 'PROGRESS_DEPTH': 0,
+        }
+
+
+
+        layout = [
+            [sg.Text("✨ Sign Up ✨", size=(30, 1), justification='center', font=("Helvetica", 20), text_color='#1ABC9C')],
+            [sg.Text("Create a new account", size=(25, 1), justification='center', font=("Helvetica", 12), text_color='lightgray')],
+            [sg.HorizontalSeparator(color='#1ABC9C')],
+            [sg.Text("Username:", size=(10, 1), font=("Helvetica", 12)), 
+            sg.InputText("", size=(30, 1), key='-USERNAME-', tooltip="Enter your username")],
+            [sg.Text("Password:", size=(10, 1), font=("Helvetica", 12)), 
+            sg.InputText("", size=(30, 1), key='-PASSWORD-', password_char='*', tooltip="Enter your password")],
+            [sg.Button("Sign Up", size=(15, 1), font=("Helvetica", 12), tooltip="Click to create your account"),
+            sg.Button("Cancel", size=(15, 1), font=("Helvetica", 12))],
+            [sg.Text('', size=(40, 1), justification='center', key='-MESSAGE-', text_color='red')],
+        ]
+
+
+        window = sg.Window("Signup Page", layout, size=(450, 350), element_justification='center', finalize=True, no_titlebar=True)
+
+
+        while True:
+            event, values = window.read()
+
+            if event == sg.WINDOW_CLOSED or event == 'Cancel':
+                window.close()
+                sys.exit()
+                break
+            elif event == 'Sign Up':
+                username = values['-USERNAME-']
+                password = values['-PASSWORD-']
+                sign_up(username =  username, password = password)
+
+
+                if username  and password:
+
+                    window.close()
+    
+                else:
+                    window['-MESSAGE-'].update("All fields are required.", text_color='red')
+
+                window.close()
+
+
+        window.close()
+        return 
+    except Exception as e:
+        print(e)
+        unknown_error()
+
+def password_reset_gui():
+
+
+    try:
+        sg.LOOK_AND_FEEL_TABLE['CustomSignupTheme'] = {
+            'BACKGROUND': '#2C3E50',
+            'TEXT': '#ECF0F1',
+            'INPUT': '#34495E',
+            'TEXT_INPUT': '#ECF0F1',
+            'SCROLL': '#2C3E50',
+            'BUTTON': ('#FFFFFF', '#1ABC9C'),
+            'PROGRESS': ('#2E86C1', '#D0D3D4'),
+            'BORDER': 1, 'SLIDER_DEPTH': 0, 'PROGRESS_DEPTH': 0,
+        }
+
+
+
+        layout = [
+            [sg.Text(" Reset password ", size=(30, 1), justification='center', font=("Helvetica", 20), text_color='#1ABC9C')],
+            [sg.Text("Reset your password", size=(27, 1), justification='center', font=("Helvetica", 12), text_color='lightgray')],
+            [sg.HorizontalSeparator(color='#1ABC9C')],
+            [sg.Text("Username:", size=(13, 1), font=("Helvetica", 12)), 
+            sg.InputText("", size=(30, 1), key='-USERNAME-', tooltip="Enter your username")],
+            [sg.Text("New password:", size=(13, 1), font=("Helvetica", 12)), 
+            sg.InputText("", size=(30, 1), key='-PASSWORD-', password_char='*', tooltip="Enter your password")],
+            [sg.Button("Reset", size=(15, 1), font=("Helvetica", 12), tooltip="Click to create your account"),
+            sg.Button("Cancel", size=(15, 1), font=("Helvetica", 12))],
+            [sg.Text('', size=(40, 1), justification='center', key='-MESSAGE-', text_color='red')],
+        ]
+
+
+        window = sg.Window("Signup Page", layout, size=(450, 350), element_justification='center', finalize=True, no_titlebar=True)
+
+        while True:
+            event, values = window.read()
+
+            if event == sg.WINDOW_CLOSED or event == 'Cancel':
+                break
+            elif event == 'Reset':
+                username = values['-USERNAME-']
+                npassword = values['-PASSWORD-']
+                change_password_in_database(username = username, new_password = npassword)
+                
+
+                if username  and npassword:
+
+                    window['-MESSAGE-'].update("Password reset successfully 🎉", text_color='green')
+                else:
+                    window['-MESSAGE-'].update("All fields are required.", text_color='red')
+                    
+
+
+        window.close()
+    except:
+        unknown_error()
 
 
 def get_online_time():
@@ -460,24 +727,6 @@ class encoded_file_storage():
         with open(self._file_path, 'wb+') as encoded_file:
             encoded_file.write(encoded_data)
         
-def custom_popup_yes_no(message, title='', keep_on_top=True):
-    # Define the layout for the custom popup window
-    layout = [
-        [sg.Text(message)],
-        [sg.Button('Yes'),
-         sg.Button('No')]
-    ]
-
-    # Create the window without a title bar
-    window = sg.Window(title, layout, keep_on_top=keep_on_top, no_titlebar=True, element_justification='center')
-
-    # Read the window's events
-    event, _ = window.read()
-
-    # Close the window
-    window.close()
-
-    return event
 
 
     
@@ -552,6 +801,7 @@ def verify_password(stored_password, provided_password):
 def sign_up(username, password):
     users = dab.child("users").get().val()
     if users and username in users:
+        username_exists()
         print("Username already exists.")
         return
     
@@ -581,217 +831,14 @@ def login(username, password):
     return True
 
 
-def invalid_user_gui():
 
 
-    sg.popup('Username not found', title='Username error', no_titlebar= True)
-    sys.exit()
-    return False
-    
 
-def user_not_found_gui():
 
 
-    sg.popup('Invalid username or password', title='username/password error', no_titlebar= True)
-    sys.exit()
-    return False
-    
 
 
-
-
-
-
-def sign_up_gui():
-
-
-
-
-    sg.LOOK_AND_FEEL_TABLE['CustomSignupTheme'] = {
-        'BACKGROUND': '#2C3E50',
-        'TEXT': '#ECF0F1',
-        'INPUT': '#34495E',
-        'TEXT_INPUT': '#ECF0F1',
-        'SCROLL': '#2C3E50',
-        'BUTTON': ('#FFFFFF', '#1ABC9C'),
-        'PROGRESS': ('#2E86C1', '#D0D3D4'),
-        'BORDER': 1, 'SLIDER_DEPTH': 0, 'PROGRESS_DEPTH': 0,
-    }
-
-
-
-    layout = [
-        [sg.Text("✨ Sign Up ✨", size=(30, 1), justification='center', font=("Helvetica", 20), text_color='#1ABC9C')],
-        [sg.Text("Create a new account", size=(25, 1), justification='center', font=("Helvetica", 12), text_color='lightgray')],
-        [sg.HorizontalSeparator(color='#1ABC9C')],
-        [sg.Text("Username:", size=(10, 1), font=("Helvetica", 12)), 
-        sg.InputText("", size=(30, 1), key='-USERNAME-', tooltip="Enter your username")],
-        [sg.Text("Password:", size=(10, 1), font=("Helvetica", 12)), 
-        sg.InputText("", size=(30, 1), key='-PASSWORD-', password_char='*', tooltip="Enter your password")],
-        [sg.Button("Sign Up", size=(15, 1), font=("Helvetica", 12), tooltip="Click to create your account"),
-        sg.Button("Cancel", size=(15, 1), font=("Helvetica", 12))],
-        [sg.Text('', size=(40, 1), justification='center', key='-MESSAGE-', text_color='red')],
-    ]
-
-
-    window = sg.Window("Signup Page", layout, size=(450, 350), element_justification='center', finalize=True, no_titlebar=True)
-
-
-    while True:
-        event, values = window.read()
-
-        if event == sg.WINDOW_CLOSED or event == 'Cancel':
-            window.close()
-            sys.exit()
-            break
-        elif event == 'Sign Up':
-            username = values['-USERNAME-']
-            password = values['-PASSWORD-']
-            sign_up(username =  username, password = password)
-
-
-            if username  and password:
-
-                sg.popup("Registered as new user!", "Welcome to the app!", title="Success", no_titlebar=True)  # Show success message
-                window.close()
- 
-            else:
-                window['-MESSAGE-'].update("All fields are required.", text_color='red')
-
-            window.close()
-
-
-    window.close()
-    return 
-
-
-def password_reset_gui():
-
-
-
-    sg.LOOK_AND_FEEL_TABLE['CustomSignupTheme'] = {
-        'BACKGROUND': '#2C3E50',
-        'TEXT': '#ECF0F1',
-        'INPUT': '#34495E',
-        'TEXT_INPUT': '#ECF0F1',
-        'SCROLL': '#2C3E50',
-        'BUTTON': ('#FFFFFF', '#1ABC9C'),
-        'PROGRESS': ('#2E86C1', '#D0D3D4'),
-        'BORDER': 1, 'SLIDER_DEPTH': 0, 'PROGRESS_DEPTH': 0,
-    }
-
-
-
-    layout = [
-        [sg.Text(" Reset password ", size=(30, 1), justification='center', font=("Helvetica", 20), text_color='#1ABC9C')],
-        [sg.Text("Reset your password", size=(27, 1), justification='center', font=("Helvetica", 12), text_color='lightgray')],
-        [sg.HorizontalSeparator(color='#1ABC9C')],
-        [sg.Text("Username:", size=(13, 1), font=("Helvetica", 12)), 
-        sg.InputText("", size=(30, 1), key='-USERNAME-', tooltip="Enter your username")],
-        [sg.Text("New password:", size=(13, 1), font=("Helvetica", 12)), 
-        sg.InputText("", size=(30, 1), key='-PASSWORD-', password_char='*', tooltip="Enter your password")],
-        [sg.Button("Reset", size=(15, 1), font=("Helvetica", 12), tooltip="Click to create your account"),
-        sg.Button("Cancel", size=(15, 1), font=("Helvetica", 12))],
-        [sg.Text('', size=(40, 1), justification='center', key='-MESSAGE-', text_color='red')],
-    ]
-
-
-    window = sg.Window("Signup Page", layout, size=(450, 350), element_justification='center', finalize=True, no_titlebar=True)
-
-    while True:
-        event, values = window.read()
-
-        if event == sg.WINDOW_CLOSED or event == 'Cancel':
-            break
-        elif event == 'Reset':
-            username = values['-USERNAME-']
-            npassword = values['-PASSWORD-']
-            change_password_in_database(username = username, new_password = npassword)
-            
-
-            if username  and npassword:
-
-                window['-MESSAGE-'].update("Password reset successfully 🎉", text_color='green')
-            else:
-                window['-MESSAGE-'].update("All fields are required.", text_color='red')
-                
-
-
-    window.close()
-
-sg.LOOK_AND_FEEL_TABLE['CustomTheme'] = {
-    'BACKGROUND': '#2C3E50',
-    'TEXT': '#ECF0F1',
-    'INPUT': '#34495E',
-    'TEXT_INPUT': '#ECF0F1',
-    'SCROLL': '#2C3E50',
-    'BUTTON': ('#FFFFFF', '#1ABC9C'),
-    'PROGRESS': ('#2E86C1', '#D0D3D4'),
-    'BORDER': 1, 'SLIDER_DEPTH': 0, 'PROGRESS_DEPTH': 0,
-}
-
-
-
-layout = [
-    [sg.Text(" Welcome to Authenticator ", size=(30, 1), justification='center', font=("Helvetica", 20), text_color='#1ABC9C')],
-    [sg.Text("Login to Continue", size=(25, 1), justification='center', font=("Helvetica", 12), text_color='lightgray')],
-    [sg.HorizontalSeparator(color='#1ABC9C')],
-    [sg.Text("Username:", size=(10, 1), font=("Helvetica", 12)), 
-     sg.InputText(key='-USERNAME-', size=(30, 1), tooltip="Enter your username")],
-    [sg.Text("Password:", size=(10, 1), font=("Helvetica", 12)), 
-     sg.InputText(key='-PASSWORD-', size=(30, 1), password_char='*', tooltip="Enter your password")],
-    [sg.Text("", size=(40, 1), key='-MESSAGE-', text_color='red', justification='center')],
-    [sg.Button("Login", size=(10, 1), font=("Helvetica", 12), tooltip="Click to log in"),
-     sg.Button("Cancel", size=(10, 1), font=("Helvetica", 12))],
-    [sg.Text("Forgot Password?", size=(20, 1), justification='center', font=("Helvetica", 10), text_color='#1ABC9C', enable_events=True, key='-FORGOT-')],
-    [sg.Text("New to the Authenticator?", size=(20, 1), justification='center', font=("Helvetica", 10), text_color='#1ABC9C', enable_events=True, key='-NEW-')]
-]
-
-
-window = sg.Window("Login Page", layout, size=(450, 300), element_justification='center', finalize=True, no_titlebar=True)
-
-
-while True:
-    event, values = window.read()
-
-    if event == sg.WINDOW_CLOSED or event == 'Cancel':
-        sys.exit()
-        break
-
-    elif event == 'Login':
-        username = values['-USERNAME-']
-        password = values['-PASSWORD-']
-
-
-
-        if login(username, password):
-
-            window['-MESSAGE-'].update("Login successful! 🎉", text_color='green')
-            
-
-        else:
-            window['-MESSAGE-'].update("Invalid username or password.", text_color='red')
-            
-        break
-    elif event == '-FORGOT-':
-        password_reset_gui()
-        window.close()
-        break
-   
-
-    elif event == '-NEW-':
-        window.close()
-        sign_up_gui()
-
-        print('new person sheesh')
-        break
-
-
-window.close()
-
-
-
-
+welcome_window_gui()
 
 
 
