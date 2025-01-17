@@ -16,23 +16,6 @@ import random
 import PySimpleGUI as sg
 import base64
 from os.path import expanduser
-import pyotp
-import qrcode
-import tensorflow as tf
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
-from tensorflow.keras.preprocessing.image import load_img, img_to_array
-from sklearn.model_selection import train_test_split
-import bcrypt
-import pyrebase #important note: Please use pip install pyrebase4 or whatever the lates version of pyrebase is. There is module and package naming discrepancy for pyrebase.
-import firebase_admin
-from firebase_admin import credentials, db
-import requests
-from datetime import datetime
-
-
-
 
 #gets the filepath of the current file the program is in
 file=sys.argv[0]
@@ -50,11 +33,9 @@ url='https://raw.githubusercontent.com/Mainakdey1/Image-Encryption-using-Cellula
 
 
 def resource_path(relative_path):
-    try:
-        base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
-        return os.path.join(base_path, relative_path)
-    except Exception as e:
-        print(e)
+    base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base_path, relative_path)
+
 
 image_path = resource_path('dark.png')
 
@@ -66,324 +47,9 @@ sys.set_int_max_str_digits(str_to_int_limits)
 
 
 #new_vers=107
-__version__=0.110
+__version__=0.107
 
 
-
-#gui space
-
-def welcome_window_gui():
-    try:
-        sg.LOOK_AND_FEEL_TABLE['CustomTheme'] = {
-            'BACKGROUND': '#2C3E50',
-            'TEXT': '#ECF0F1',
-            'INPUT': '#34495E',
-            'TEXT_INPUT': '#ECF0F1',
-            'SCROLL': '#2C3E50',
-            'BUTTON': ('#FFFFFF', '#1ABC9C'),
-            'PROGRESS': ('#2E86C1', '#D0D3D4'),
-            'BORDER': 1, 'SLIDER_DEPTH': 0, 'PROGRESS_DEPTH': 0,
-        }
-
-
-
-        layout = [
-            [sg.Text(" Welcome to Authenticator ", size=(30, 1), justification='center', font=("Helvetica", 20), text_color='#1ABC9C')],
-            [sg.Text("Login to Continue", size=(25, 1), justification='center', font=("Helvetica", 12), text_color='lightgray')],
-            [sg.HorizontalSeparator(color='#1ABC9C')],
-            [sg.Text("Username:", size=(10, 1), font=("Helvetica", 12)), 
-            sg.InputText(key='-USERNAME-', size=(30, 1), tooltip="Enter your username")],
-            [sg.Text("Password:", size=(10, 1), font=("Helvetica", 12)), 
-            sg.InputText(key='-PASSWORD-', size=(30, 1), password_char='*', tooltip="Enter your password")],
-            [sg.Text("", size=(40, 1), key='-MESSAGE-', text_color='red', justification='center')],
-            [sg.Button("Login", size=(10, 1), font=("Helvetica", 12), tooltip="Click to log in"),
-            sg.Button("Cancel", size=(10, 1), font=("Helvetica", 12))],
-            [sg.Text("Forgot Password?", size=(20, 1), justification='center', font=("Helvetica", 10), text_color='#1ABC9C', enable_events=True, key='-FORGOT-')],
-            [sg.Text("New to the Authenticator?", size=(20, 1), justification='center', font=("Helvetica", 10), text_color='#1ABC9C', enable_events=True, key='-NEW-')]
-        ]
-
-
-        window = sg.Window("Login Page", layout, size=(450, 300), element_justification='center', finalize=True, no_titlebar=True)
-
-
-        while True:
-            event, values = window.read()
-
-            if event == sg.WINDOW_CLOSED or event == 'Cancel':
-                sys.exit()
-                break
-
-            elif event == 'Login':
-                username = values['-USERNAME-']
-                password = values['-PASSWORD-']
-
-
-
-                if login(username, password):
-
-                    window['-MESSAGE-'].update("Login successful! 🎉", text_color='green')
-                    
-
-                else:
-                    window['-MESSAGE-'].update("Invalid username or password.", text_color='red')
-                    
-                break
-            elif event == '-FORGOT-':
-                password_reset_gui()
-                window.close()
-                break
-        
-
-            elif event == '-NEW-':
-                window.close()
-                sign_up_gui()
-
-                print('new person sheesh')
-                break
-
-
-        window.close()
-    except Exception as e:
-        unknown_error()
-        print(e)
-
-
-
-def username_exists():
-    try:
-        sg.popup('Username already exists. Please sign in or reset password.', title='username exists error', no_titlebar= True)
-        sign_up()
-        return False
-    except Exception as e:
-        print(e)
-        unknown_error()
-
-    
-def unknown_error():
-    try:
-        sg.popup('An unknown error has occured. Please restart the application. If the issue persists, consult the log files.', title='unknown error', no_titlebar= True)
-        sys.exit()
-        return False
-    except Exception as e:
-        print(e)
-    
-
-def custom_popup_yes_no(message, title='', keep_on_top=True):
-    # Define the layout for the custom popup window
-    try:
-        layout = [
-            [sg.Text(message)],
-            [sg.Button('Yes'),
-            sg.Button('No')]
-        ]
-
-        # Create the window without a title bar
-        window = sg.Window(title, layout, keep_on_top=keep_on_top, no_titlebar=True, element_justification='center')
-
-        # Read the window's events
-        event, _ = window.read()
-
-        # Close the window
-        window.close()
-
-        return event
-    
-    except Exception as e:
-        print(e)
-        unknown_error()
-
-def timezone_not_synced():
-    try:
-        sg.popup('Time zones not synced. Please set system time to run the application', title='timezone desync error', no_titlebar= True)
-        sys.exit()
-        return False
-    except Exception as e:
-        print(e)
-        unknown_error()
-
-
-def invalid_user_gui():
-
-    try:
-        sg.popup('Username not found', title='Username error', no_titlebar= True)
-        sys.exit()
-        return False
-    except Exception as e:
-        print(e)
-        unknown_error()
-        
-
-def user_not_found_gui():
-
-    try:
-        sg.popup('Invalid username or password', title='username/password error', no_titlebar= True)
-        sys.exit()
-        return False
-    except Exception as e:
-        print(e)
-        unknown_error()
-
-def sign_up_gui():
-
-
-
-    try:
-        sg.LOOK_AND_FEEL_TABLE['CustomSignupTheme'] = {
-            'BACKGROUND': '#2C3E50',
-            'TEXT': '#ECF0F1',
-            'INPUT': '#34495E',
-            'TEXT_INPUT': '#ECF0F1',
-            'SCROLL': '#2C3E50',
-            'BUTTON': ('#FFFFFF', '#1ABC9C'),
-            'PROGRESS': ('#2E86C1', '#D0D3D4'),
-            'BORDER': 1, 'SLIDER_DEPTH': 0, 'PROGRESS_DEPTH': 0,
-        }
-
-
-
-        layout = [
-            [sg.Text("✨ Sign Up ✨", size=(30, 1), justification='center', font=("Helvetica", 20), text_color='#1ABC9C')],
-            [sg.Text("Create a new account", size=(25, 1), justification='center', font=("Helvetica", 12), text_color='lightgray')],
-            [sg.HorizontalSeparator(color='#1ABC9C')],
-            [sg.Text("Username:", size=(10, 1), font=("Helvetica", 12)), 
-            sg.InputText("", size=(30, 1), key='-USERNAME-', tooltip="Enter your username")],
-            [sg.Text("Password:", size=(10, 1), font=("Helvetica", 12)), 
-            sg.InputText("", size=(30, 1), key='-PASSWORD-', password_char='*', tooltip="Enter your password")],
-            [sg.Button("Sign Up", size=(15, 1), font=("Helvetica", 12), tooltip="Click to create your account"),
-            sg.Button("Cancel", size=(15, 1), font=("Helvetica", 12))],
-            [sg.Text('', size=(40, 1), justification='center', key='-MESSAGE-', text_color='red')],
-        ]
-
-
-        window = sg.Window("Signup Page", layout, size=(450, 350), element_justification='center', finalize=True, no_titlebar=True)
-
-
-        while True:
-            event, values = window.read()
-
-            if event == sg.WINDOW_CLOSED or event == 'Cancel':
-                window.close()
-                sys.exit()
-                break
-            elif event == 'Sign Up':
-                username = values['-USERNAME-']
-                password = values['-PASSWORD-']
-                sign_up(username =  username, password = password)
-
-
-                if username  and password:
-
-                    window.close()
-    
-                else:
-                    window['-MESSAGE-'].update("All fields are required.", text_color='red')
-
-                window.close()
-
-
-        window.close()
-        return 
-    except Exception as e:
-        print(e)
-        unknown_error()
-
-def password_reset_gui():
-
-
-    try:
-        sg.LOOK_AND_FEEL_TABLE['CustomSignupTheme'] = {
-            'BACKGROUND': '#2C3E50',
-            'TEXT': '#ECF0F1',
-            'INPUT': '#34495E',
-            'TEXT_INPUT': '#ECF0F1',
-            'SCROLL': '#2C3E50',
-            'BUTTON': ('#FFFFFF', '#1ABC9C'),
-            'PROGRESS': ('#2E86C1', '#D0D3D4'),
-            'BORDER': 1, 'SLIDER_DEPTH': 0, 'PROGRESS_DEPTH': 0,
-        }
-
-
-
-        layout = [
-            [sg.Text(" Reset password ", size=(30, 1), justification='center', font=("Helvetica", 20), text_color='#1ABC9C')],
-            [sg.Text("Reset your password", size=(27, 1), justification='center', font=("Helvetica", 12), text_color='lightgray')],
-            [sg.HorizontalSeparator(color='#1ABC9C')],
-            [sg.Text("Username:", size=(13, 1), font=("Helvetica", 12)), 
-            sg.InputText("", size=(30, 1), key='-USERNAME-', tooltip="Enter your username")],
-            [sg.Text("New password:", size=(13, 1), font=("Helvetica", 12)), 
-            sg.InputText("", size=(30, 1), key='-PASSWORD-', password_char='*', tooltip="Enter your password")],
-            [sg.Button("Reset", size=(15, 1), font=("Helvetica", 12), tooltip="Click to create your account"),
-            sg.Button("Cancel", size=(15, 1), font=("Helvetica", 12))],
-            [sg.Text('', size=(40, 1), justification='center', key='-MESSAGE-', text_color='red')],
-        ]
-
-
-        window = sg.Window("Signup Page", layout, size=(450, 350), element_justification='center', finalize=True, no_titlebar=True)
-
-        while True:
-            event, values = window.read()
-
-            if event == sg.WINDOW_CLOSED or event == 'Cancel':
-                break
-            elif event == 'Reset':
-                username = values['-USERNAME-']
-                npassword = values['-PASSWORD-']
-                change_password_in_database(username = username, new_password = npassword)
-                
-
-                if username  and npassword:
-
-                    window['-MESSAGE-'].update("Password reset successfully 🎉", text_color='green')
-                else:
-                    window['-MESSAGE-'].update("All fields are required.", text_color='red')
-                    
-
-
-        window.close()
-    except:
-        unknown_error()
-
-
-def get_online_time():
-    try:
-        response = requests.get("https://timeapi.io/api/Time/current/zone?timeZone=Asia/Kolkata")
-        response.raise_for_status()  # Raise exception for HTTP errors
-        data = response.json()
-        return data
-
-    except requests.RequestException as e:
-        print(f"Error fetching online time: {e}")
-        return None
-
-def compare_times():
-    dt= datetime.now()
-    hour= dt.hour
-    minute = dt.minute
-    day = dt.day
-    month = dt.month
-    try:
-        dted = get_online_time()
-        if dted['hour'] == hour and dted['minute'] == minute and dted['day'] == day and dted['month'] == month:
-            return True
-        else:
-            return False
-    except Exception as e:
-        print(e)
-
-
-try:
-    if compare_times() == True:
-        print('Time zones are synchronized')
-
-    else:
-        timezone_not_synced()
-        print('Time zone not synchronized, please synchronize data and time on local device.')
-        sys.exit()
-
-
-except Exception as e:
-    print(f"An error occured: {e}"
-          )
 
 
 #Logger class for logging events. Events have 3 severity:info, warning and critical
@@ -720,13 +386,31 @@ class encoded_file_storage():
 
 
         
-
+  
         
         # Writing the Base64 encoded data to a new file
         
         with open(self._file_path, 'wb+') as encoded_file:
             encoded_file.write(encoded_data)
         
+def custom_popup_yes_no(message, title='', keep_on_top=True):
+    # Define the layout for the custom popup window
+    layout = [
+        [sg.Text(message)],
+        [sg.Button('Yes'),
+         sg.Button('No')]
+    ]
+
+    # Create the window without a title bar
+    window = sg.Window(title, layout, keep_on_top=keep_on_top, no_titlebar=True, element_justification='center')
+
+    # Read the window's events
+    event, _ = window.read()
+
+    # Close the window
+    window.close()
+
+    return event
 
 
     
@@ -736,117 +420,6 @@ class encoded_file_storage():
 
 logins=logger("logfile.txt",0,dir_pathV,"globallogger")
 logins.info("APPLICATION VERSION NUMBER : ",str(__version__))
-
-
-
-
-
-# Firebase configuration
-firebase_config = {
-    'apiKey': "AIzaSyC7EXl7sMRE1rrwRted_kYKybecl0IQajk",
-  'authDomain': "ssenc-96031.firebaseapp.com",
-  'databaseURL': "https://ssenc-96031-default-rtdb.asia-southeast1.firebasedatabase.app",
-  'projectId': "ssenc-96031",
-  'storageBucket': "ssenc-96031.firebasestorage.app",
-  'messagingSenderId': "371333696694",
-  'appId': "1:371333696694:web:37043b8b1212e36796ea17",
-  'measurementId': "G-NGPL08S15H"
-
-}
-
-
-
-# Initialize Firebase app
-cred = credentials.Certificate(r"C:\Users\chestor\Desktop\Project_tempfiles\Units\ssenc_json.json")
-firebase_admin.initialize_app(cred, {
-    "databaseURL": "https://ssenc-96031-default-rtdb.asia-southeast1.firebasedatabase.app"
-})
-
-
-
-def change_password_in_database(username, new_password):
-    ref = db.reference('users')  # Reference the "users" node in the database
-    user_ref = ref.child(username)  # Locate the specific user
-    hashed_new_pw= hash_password(new_password)
-
-    if user_ref.get():
-        user_ref.update({"password": hashed_new_pw.decode('utf-8')})
-        sg.popup("Password reset successfully", "Welcome back!", title="Success", no_titlebar=True)  # Show success message
-        print("Password updated successfully in the database!")
-    else:
-        print("User not found.")
-
-    return
-
-
-def hash_password(password):
-    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-
-
-
-
-
-
-
-
-
-
-
-firebase = pyrebase.initialize_app(firebase_config)
-dab = firebase.database()
-
-def verify_password(stored_password, provided_password):
-    return bcrypt.checkpw(provided_password.encode('utf-8'), stored_password)
-
-def sign_up(username, password):
-    users = dab.child("users").get().val()
-    if users and username in users:
-        username_exists()
-        print("Username already exists.")
-        return
-    
-    hashed_password = hash_password(password)
-    dab.child("users").child(username).set({"password": hashed_password.decode('utf-8')})
-    print("User registered successfully!")
-
-def login(username, password):
-    user = dab.child("users").child(username).get().val()
-    if not user:
-
-        print("User not found.")
-        invalid_user_gui()
-        return False
-
-    
-    stored_password = user["password"].encode('utf-8')
-    if verify_password(stored_password, password):
-        print("Login successful!")
-
-    else:
-        user_not_found_gui()
-        print("Invalid username or password.")
-        sys.exit()
-
-    
-    return True
-
-
-
-
-
-
-
-
-
-welcome_window_gui()
-
-
-
-
-
-
-
-
 
 #initiate connection object.
 try:
@@ -965,88 +538,6 @@ def text_to_binary(text):
         logins.warning('TEXT_TO_BINARY','ERROR IN CALLING')
 
 
-def AI_differen_func(raw_image_path):
-
-
-
-    data_dir = dir_pathV
-    genuine_dir = os.path.join(data_dir, "genuine")
-    forged_dir = os.path.join(data_dir, "forged")
-
-
-
-    def load_data(data_dir, label , img_size = (128, 128)):
-
-
-        
-
-        images = []
-        labels = []
-        
-
-        def load_images_from_folder(folder, label):
-            for filename in os.listdir(folder):
-                if filename.endswith(".png") or filename.endswith(".jpg"):
-                    filepath = os.path.join(folder, filename)
-                img = load_img(filepath, target_size=img_size, color_mode="grayscale")
-                img_array = img_to_array(img)  
-                images.append(img_array)
-                labels.append(label)  
-            return np.array(images), np.array(labels)
-        
-        return load_images_from_folder(data_dir, label)
-
-    gen_signatures, gen_labels = load_data(genuine_dir,1)
-    forged_signatures, forged_labels = load_data(forged_dir,0)
-
-
-    all_images = np.concatenate((gen_signatures, forged_signatures), axis=0)
-    all_labels = np.concatenate((gen_labels, forged_labels), axis=0)
-
-    from sklearn.utils import shuffle
-    all_images, all_labels = shuffle(all_images, all_labels, random_state=42)
-
-    all_images = all_images / 255.0
-
-    from sklearn.model_selection import train_test_split
-    X_train, X_test, y_train, y_test = train_test_split(all_images, all_labels, test_size=0.2, random_state=42)
-
-
-    model = Sequential([
-        Conv2D(32, (3, 3), activation='relu', input_shape=(128, 128, 1)),
-        MaxPooling2D((2, 2)),
-        Dropout(0.2),
-        Conv2D(64, (3, 3), activation='relu'),
-        MaxPooling2D((2, 2)),
-        Dropout(0.2),
-        Flatten(),
-        Dense(128, activation='relu'),
-        Dropout(0.5),
-        Dense(1, activation='sigmoid')  
-    ])
-
-    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
-
-
-    history = model.fit(X_train, y_train, epochs=10, validation_split=0.2, batch_size=32)
-
-
-    loss, accuracy = model.evaluate(X_test, y_test)
-    print(f"Test Accuracy: {accuracy:.2f}")
-
-
-    def predict_signature(image):
-        processed_image = image / 255.0
-        processed_image = np.expand_dims(processed_image, axis=0)  # Add batch dimension
-        return "Genuine" if model.predict(processed_image) > 0.5 else "Forged"
-    img_size=(128, 128)
-
-    post_processed_img = load_img(raw_image_path, target_size=img_size, color_mode="grayscale")
-    post_processed_img_array = img_to_array(post_processed_img)
-    result = predict_signature(post_processed_img_array)
-    print(f"Prediction: {result}")
-
-    return None
 
 
 
@@ -1483,11 +974,18 @@ def text_encrypt_decrypt(pseudo_random_number,unenc_key_arr):
 
 
 #Signature encryption and decryption module that takes a psn(key) and a working data set in array form and encrypts as well as decrypts it.
-def signature_encrypt_decrypt(pseudo_random_number, unenc_key_arr, height, width, raw_image_path):
+def signature_encrypt_decrypt(pseudo_random_number, unenc_key_arr,height, width):
 
 
 
     try:
+
+
+
+
+
+
+    
 
         prim_len=len(unenc_key_arr)
         sbox_arr=sbox(height,width)
@@ -1578,91 +1076,6 @@ def signature_encrypt_decrypt(pseudo_random_number, unenc_key_arr, height, width
         enc=encoded_file_storage(r'C:\Users\chestor\Desktop\enc_signature.pxe',storage_pseudo_random_number)
         enc.encode(enc_key_arr)
         window.close()
-        AI_response= custom_popup_yes_no("Do you wish to run AI(CNN) on the signature to check if it is forged?")
-        if AI_response == 'Yes':
-            secret = pyotp.random_base32()
-            print(f"Secret Key: {secret}")
-
-
-            totp = pyotp.TOTP(secret)
-
-
-            qr_url = totp.provisioning_uri(name="Sirsimonjerkalot", issuer_name="ssenc")
-            qr = qrcode.make(qr_url)
-            qr.save("qrcode.png")
-            qr_path = resource_path('qrcode.png')
-            title_bar = [
-                [sg.Text('QR code', background_color='#2e756a', text_color='white', pad=(10, 0), size=(30, 1)),
-                ]
-                        ]
-            layout= [[sg.Column(title_bar, background_color='#2e756a')],
-                    [sg.Image(qr_path)]
-                     , [sg.Text('Enter the OTP generated by your authenticator app please:  '), sg.InputText(key='-ITER-')] ,
-                       [sg.Button('Start'), sg.Button('Exit')] ]
-            window= sg.Window('Your qr code',layout, no_titlebar=True)
-            event, values= window.read()
-            if event == 'Start':
-
-                window.close()
-                
-                print("QR code saved as 'qrcode.png'. Scan this with your 2FA app.")
-
-
-                user_otp = values[ '-ITER-']
-                if totp.verify(user_otp):
-                    print("OTP is valid!")
-                    
-                    
-                    class RedirectOutput:
-                        def __init__(self, output_element):
-                            self.output_element = output_element
-
-                        def write(self, message):
-                            
-                            self.output_element.update(message, append=True)
-
-                        def flush(self):
-                            pass 
-
-
-
-                    layout = [
-                        [sg.Text("Terminal Output")],
-                        [sg.Multiline(size=(80, 20), key="output", disabled=True, autoscroll=True)],
-                        [sg.Button("Start"), sg.Button("Exit")],
-                    ]
-
-                
-                    window = sg.Window("AI prediction terminal", layout, finalize=True)
-
-                
-                    output_element = window["output"]
-                    sys.stdout = RedirectOutput(output_element)
-
-                
-                    while True:
-                        event, values = window.read(timeout=10) 
-
-                        if event == sg.WINDOW_CLOSED or event == "Exit":
-                            break
-                        elif event == "Start":
-                            print("hello")
-                            AI_differen_func(raw_image_path= raw_image_path)
-                        
-
-
-                 
-                    sys.stdout = sys.__stdout__
-                    window.close()
-
-                else:
-                    print("Invalid OTP. Please try again.")
-            elif event == 'Exit':
-                sys.exit()
-
-
-        else:
-            print('Fatal error!!')
         sys.exit()
 
     
@@ -1840,7 +1253,7 @@ def main():
 
                 height,width, unenc_key_arr=signo_inp_method(file_path)
 
-                signature_encrypt_decrypt(pseudo_random_number,unenc_key_arr, height, width, raw_image_path=file_path)
+                signature_encrypt_decrypt(pseudo_random_number,unenc_key_arr,height,width)
             else:
                 sys.exit()
             

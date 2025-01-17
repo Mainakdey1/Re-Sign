@@ -969,7 +969,7 @@ def AI_differen_func(raw_image_path):
 
 
 
-    data_dir = r"C:\Users\chestor"
+    data_dir = dir_pathV
     genuine_dir = os.path.join(data_dir, "genuine")
     forged_dir = os.path.join(data_dir, "forged")
 
@@ -1488,13 +1488,6 @@ def signature_encrypt_decrypt(pseudo_random_number, unenc_key_arr, height, width
 
 
     try:
-
-
-
-
-
-
-    
 
         prim_len=len(unenc_key_arr)
         sbox_arr=sbox(height,width)
