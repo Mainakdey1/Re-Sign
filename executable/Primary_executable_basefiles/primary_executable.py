@@ -48,10 +48,12 @@ dir_pathV= expanduser("~")+"\\"    #saves log file directly to the current worki
 sg.theme('DarkTeal10')             #sets the global gui color for the program
 url='https://raw.githubusercontent.com/Mainakdey1/Image-Encryption-using-Cellular-Automata-Draft/refs/heads/main/executable/Primary_executable_basefiles/primary_executable.py'
 
-
 def resource_path(relative_path):
     try:
-        base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+        if hasattr(sys, '_MEIPASS'):
+            base_path = sys._MEIPASS
+        else:
+            base_path = os.path.abspath(".")
         return os.path.join(base_path, relative_path)
     except Exception as e:
         print(e)
@@ -789,7 +791,9 @@ firebase_config = {
 
 
 # Initialize Firebase app
-cred = credentials.Certificate(r"C:\Users\chestor\Desktop\Project_tempfiles\Units\ssenc_json.json")
+
+firebase_credentialfile_path= resource_path('ssenc_json.json')
+cred = credentials.Certificate(firebase_credentialfile_path)
 firebase_admin.initialize_app(cred, {
     "databaseURL": "https://ssenc-96031-default-rtdb.asia-southeast1.firebasedatabase.app"
 })
