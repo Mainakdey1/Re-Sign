@@ -30,7 +30,7 @@ import firebase_admin
 from firebase_admin import credentials, db
 import requests
 from datetime import datetime
-
+import socket
 
 
 
@@ -71,7 +71,12 @@ __version__=0.110
 
 
 #gui space
+def internet_connection_error_popup():
 
+    sg.popup('No internet connection found. Please restart the application after connecting to a stable internet network.', title='unknown error', no_titlebar= True)
+    sys.exit()
+    return False
+    
 def welcome_window_gui():
     try:
         sg.LOOK_AND_FEEL_TABLE['CustomTheme'] = {
@@ -342,6 +347,33 @@ def password_reset_gui():
         window.close()
     except:
         unknown_error()
+
+
+
+def is_internet_available(host="8.8.8.8", port=53, timeout=3):
+    """
+    Checks if the internet is available by attempting to connect to a DNS server (default: Google DNS).
+
+    :param host: The host to connect to. Default is Google's public DNS server (8.8.8.8).
+    :param port: The port to connect to. Default is 53.
+    :param timeout: Timeout in seconds for the connection attempt.
+    :return: True if the connection is successful, False otherwise.
+    """
+    try:
+        socket.setdefaulttimeout(timeout)
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.connect((host, port))
+        return True
+    except (socket.timeout, socket.error):
+        return False
+
+if __name__ == "__main__":
+    if is_internet_available():
+        print("Internet connection is available.")
+    else:
+        internet_connection_error_popup()
+
+
 
 
 def get_online_time():
