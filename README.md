@@ -21,7 +21,7 @@ pip --version
 ```
 You must install the following python packages on your system using pip:
 ```bash
-pip install urllib3,imageio,numpy,opencv-python,pysimplegui,pyotp,qrcode,tensorflow,bcrypt,pyrebase,firebase-admin,requests,sockets
+pip install urllib3, imageio, numpy, opencv-python, pysimplegui, pyotp, qrcode, tensorflow, bcrypt, pyrebase, firebase-admin, requests, sockets
 ```
 
 When setting up the code for the first time, you are required to acquire a developer key for your use from pysimplegui's website. After getting the key, paste it into the pysimplegui dialog box that appears when running the code for the first time.(This step is for setup-only, you will not be required to do this again.)
