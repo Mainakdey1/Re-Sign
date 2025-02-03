@@ -28,3 +28,9 @@ When setting up the code for the first time, you are required to acquire a devel
 
 When prompted with the option to run AI based CNN model, you will be required to use an qr based authenticator application on your phone to access the database for the signatures.
 Please use only .pxe or .txt files to store encryption keys. Please use only the provided decrypter to decrypt the .pxe files on your system.
+
+# Executable:
+
+It is advised to not download executables from github in general. As such, if you wish to do so, visit executable/Primary_executable_basefiles and select the non deprecated version of the application. Once it is downloaded, create an account on PySimpleGUI and paste your developer key and you're good to go!
+
+In the future checksums will be added to ensure that downloading executables would be safe.
