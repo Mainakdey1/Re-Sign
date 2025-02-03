@@ -1,7 +1,7 @@
 # Image-Encryption-using-Cellular-Automata-Draft
 
 
-This project, created for our 4th year sems, is an attempt to encrypt data using a combination of rules including cellular automata, sbox and other chaotic systems. It is purely based on python and has been tested to work within very light system requirements. In addition to encryption it also features a storage system for containing the encrypted data, that is also encrypted.
+This project is an attempt to encrypt data using a combination of rules including cellular automata, sbox and other chaotic systems. It is purely based on python and has been tested to work within very light system requirements. In addition to encryption it also features a storage system for containing the encrypted data, that is also encrypted.
 The project offers three options: 
 1. Plain Text encryption
 2. Image encrption
