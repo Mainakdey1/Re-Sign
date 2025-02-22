@@ -1,13 +1,8 @@
-# Image-Encryption-using-Cellular-Automata-Draft
+# Re - Sign
+This is a new generation signature encryption software aimed at replacing current banking system's signature encryption processes by using cellular automata rule based encryption procedures. Backed by past and ongoing research, cellular research is proven to show much higher entropy in encryption. 
 
 
-This project is an attempt to encrypt data using a combination of rules including cellular automata, sbox and other chaotic systems. It is purely based on python and has been tested to work within very light system requirements. In addition to encryption it also features a storage system for containing the encrypted data, that is also encrypted.
-The project offers three options: 
-1. Plain Text encryption
-2. Image encrption
-3. Signature encryption
-
-All of these methods have been tested and have shown very satisfactory entropy in the resulting encrypted data, making it very hard for attackers to decrypt said data without keys. And of keys, it offers two: A public key and a private key.
+All of the encryption methods have been tested and have shown very satisfactory entropy in the resulting encrypted data, making it very hard for attackers to decrypt said data without keys. And of keys, it offers two: A public key and a private key.
 The application is available in the raw script format and also available as a standalone package as an executable application. In order to install and run the application(recommended), go to executable/Primary_executable/ and select lc_primary_executable.exe. Download the file by clicking on 'view raw file' option.
 
 ---
